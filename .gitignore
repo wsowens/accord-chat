@@ -1,0 +1,5 @@
+elm-stuff/*
+*.js
+
+# folder containing the release
+chat/*

@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue&display=swap');
+
+html {
+    font-family: 'Comic Neue', cursive;
+}
+
+body {
+    background-color: #f5f5f5;
+}
+
+#main {
+    
+    width: 50%;
+    margin: 10% 25% 20%;
+    height: 65vh;
+    max-height: 65vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center;
+
+    /* for debugging purposes */
+    /* outline: dashed green; */
+}
+
+.main-element {
+    margin: 2.5% 0;
+    text-align: center;
+    font-size: xx-large;
+    /* outline: dashed blue; */
+    width: 100%;
+}
+
+.error {
+    color: rgba(175, 47, 47, 0.5);
+}
+
+input {
+    border: none;
+    outline: none;
+    background: none;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+input.form {
+    text-decoration: underline;
+    /* outline: dashed blue; */
+}
+
+input.main-element {
+    border-bottom: solid black 2px;
+    width: 50%
+}
+
+button.main-element {
+    font-family: inherit;
+    width: 30%;
+    outline: none;
+    box-shadow: none;
+    border-radius: 10px;
+    background: none;
+    border-bottom: solid rgba(24, 24, 24, 0.5) 4px;
+}
+
+button.main-element:hover {
+    border-bottom: solid rgba(24, 24, 24, 0.5) 2px;
+}
+
+#greeting {
+    text-align: left;
+}
+
+#chat-input, #chat-output {
+    background-color: rgba(255, 255, 255, 0.7);
+    text-align: left;
+    white-space: pre-wrap;
+    font-size: medium;
+    font-family: inherit;
+    box-shadow: 0 0 50px 1px rgba(0, 0, 0, 0.50);
+}
+
+#chat-input {
+    resize: none;
+    /* term-input is kept at about 1 line */
+    min-height: 2.0em;
+    max-height: 2.0em;
+    overflow-y: auto; /* no scrollbar */
+}
+
+#chat-output {
+    overflow: hidden scroll;
+    overflow-wrap: break-word;
+    flex-grow: 1;
+    height: 100vh;
+}

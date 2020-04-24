@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="chat.css">
+  <script src="chat.js"></script>
+</head>
+<body>
+  <script>
+    var app = Elm.Main.init();  
+    
+    /* NOTE: if you intend to deploy this on a real server, 
+      you may need to change the socket address.
+      Most browsers (Firefox + Chrome) do not allow you an insecure
+      websocket connection (ws://hostname) if you are connected over
+      http.
+    */
+    var socket = new WebSocket("ws://localhost:6789");
+    
+    function disconnect(_) {
+      app.ports.disconnected.send(null);
+    }
+    socket.addEventListener("close", disconnect);
+    socket.addEventListener("error", disconnect);
+
+    socket.addEventListener("message", (event) => {
+      app.ports.receivedMsg.send(event.data);
+    });
+
+    app.ports.sendMsg.subscribe((msg) => {
+      if (socket != null) {
+        socket.send(msg);
+      };
+    });
+  </script>
+</body>
+</html>
