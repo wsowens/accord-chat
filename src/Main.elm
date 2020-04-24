@@ -18,6 +18,7 @@ main =
 
 -- PORTS
 port sendMsg : String -> Cmd msg
+--port clearBox : () -> Cmd msg
 
 port receivedMsg : (String -> msg) -> Sub msg
 port disconnected : (() -> msg) -> Sub msg
@@ -33,10 +34,16 @@ type alias Chat =
   , content: String
   }
 
+type alias Profile =
+  { name: String
+  , topic: String
+  , inProgress: String
+  }
+
 type AppState
   = Alert (String, AppState)
   | Prompt String
-  | Chatting (String, String) -- Name, Topic
+  | Chatting Profile -- Name, Topic
   | Disconnected
 
 -- INIT
@@ -49,6 +56,7 @@ type Msg
   = SubmitName String
   | SubmitTopic String
   | SendChat String
+  | ComposeChat String
   | RecvChat Chat
   | ErrMsg String
   | UserAck
@@ -59,37 +67,38 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = 
   case msg of
     SubmitName newname ->
-      case model.state of 
-        Chatting (oldname, _) ->
-          -- if name is the same, then do nothing
-          if oldname == newname then
-            ( model, Cmd.none )
-          else
-            handleSubmitName model newname
-        Prompt _ ->
-            handleSubmitName model newname
-        -- ignore commands if disconnected or processing an alert
-        _ -> (model, Cmd.none)
+      handleSubmitName model newname
     SubmitTopic newtopic ->
       case model.state of
-        Chatting (name, oldtopic) ->
+        Chatting {name, topic, inProgress} ->
           -- if topic is the same, then do nothing
-          if oldtopic == newtopic then
+          if topic == newtopic then
             ( model, Cmd.none )
           else if isBadName newtopic then
             ( { model | state = Alert ( badNameErr, model.state ) }
             , Cmd.none
             )
           else
-            ( { model | state = Chatting ( name, newtopic ) }
+            ( { model | state = Chatting <| Profile name newtopic inProgress }
             , submitTopic newtopic
             )
         -- ignore all other commands
         _ -> (model, Cmd.none)
     SendChat chat -> 
-      ( model
-      , sendChat chat
-      )
+      case model.state of 
+        Chatting {name, topic, inProgress} ->
+            ( {model | state = Chatting <| Profile name topic ""}
+            , sendChat chat
+            )
+        -- ignore chats if not in chatting mode
+        _ -> (model, Cmd.none)
+    ComposeChat updated ->
+      case model.state of
+        Chatting {name, topic, inProgress} ->
+            ( {model | state = Chatting <| Profile name topic updated}
+            , Cmd.none
+            )
+        _ -> (model, Cmd.none)
     RecvChat chat ->
       ( { model | chatlog = chat :: model.chatlog }
       , Cmd.none
@@ -132,16 +141,21 @@ handleSubmitName model newname =
     , Cmd.none
     )
   else
-    ( { model | state = Chatting ( newname, getTopic model ) 
-      }
-    , submitName newname
-    )
-
-getTopic : Model -> String
-getTopic model =
-  case model.state of
-    Chatting(_, topic) -> topic
-    _ -> "Honda_Vehicles"
+    case model.state of
+      Chatting profile ->
+        if newname == profile.name then
+          ( model, Cmd.none)
+        else
+          let updated = { profile | name = newname } in
+          ( { model | state = Chatting updated }
+          , submitName newname
+          )
+      Prompt _ -> 
+        ( { model | state = Chatting <| Profile newname "Honda_Vehicles" "" }
+        , submitName newname
+        )
+      -- this command is invalid, if user isn't chatting or prompted
+      _ -> ( model, Cmd.none )
 
 badNameErr : String
 badNameErr =
@@ -187,14 +201,14 @@ view model =
 title : Model -> String
 title model =
   case model.state of
-    Chatting (_, topic) -> topic
+    Chatting profile -> profile.topic
     _ -> "Accord"
 
 mainContent : Model -> List (Html.Html Msg)
 mainContent model =
   case model.state of
-    Chatting (name, topic) ->
-      displayChat name topic model.chatlog
+    Chatting profile ->
+      displayChat profile model.chatlog
     Alert (e, _) ->
       displayAlert e
     Prompt msg ->
@@ -203,8 +217,8 @@ mainContent model =
       displayDisconnect
 
 
-displayChat : String -> String -> List Chat -> List (Html.Html Msg)
-displayChat name topic chatlog =
+displayChat : Profile -> List Chat -> List (Html.Html Msg)
+displayChat {name, topic, inProgress} chatlog =
   [ div [ class "main-element", id "greeting" ] 
     [ text "Welcome, ", formField SubmitName name
     , Html.br [] []
@@ -215,7 +229,7 @@ displayChat name topic chatlog =
   , Html.textarea [ class "main-element", id "chat-input", 
       Attr.spellcheck True,
       Attr.placeholder "Enter a message here.",
-      handleInput SendChat, Attr.value "" ] []
+      handleTextArea, Attr.value inProgress ] []
   ]
 
 
@@ -265,8 +279,17 @@ All functions below this are for making handleInput work.
 handleInput : (String -> Msg) -> Html.Attribute Msg
 handleInput msgtype =
   eventDecoder 
-  |> Decode.andThen checkEnterShift
+  |> Decode.andThen (checkEnterShift Events.targetValue (Decode.fail "not enter") )
   |> Decode.map (\v -> (msgtype v, False) )
+  |> Events.stopPropagationOn "keypress"
+
+handleTextArea : Html.Attribute Msg
+handleTextArea =
+  eventDecoder
+  |> Decode.andThen (checkEnterShift 
+      (Decode.map (\msg -> (SendChat msg, True)) Events.targetValue)
+      (Decode.map (\msg -> (ComposeChat (Debug.log "updating: " msg), True) ) Events.targetValue)
+    )
   |> Events.stopPropagationOn "keypress"
 
 type alias Event =
@@ -274,15 +297,15 @@ type alias Event =
   , key : Int
   }
 
-checkEnterShift: Event -> Decoder String
-checkEnterShift e =
+checkEnterShift: (Decoder a) -> (Decoder a) -> Event -> Decoder a
+checkEnterShift ifTrue ifFalse e =
   if e.key == 13 then
     if e.shift then
-      Decode.fail "Shift key pressed with enter"
+      ifFalse
     else
-      Events.targetValue
+      ifTrue
   else
-    Decode.fail "Shift key pressed with enter"
+    ifFalse
 
 
 checkEnter: Event -> Decoder String
