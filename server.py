@@ -113,13 +113,13 @@ async def counter(websocket, path):
                 data = json.loads(message)
             except json.decoder.JSONDecodeError as ex:
                 logging.error(ex)
-            if data["type"] == "name":
+            if data["kind"] == "name":
                 name = data["content"]
                 await change_name(websocket, name)
-            elif data["type"] == "message":
+            elif data["kind"] == "message":
                 msg = data["content"]
                 await send_message(websocket, msg)
-            elif data["type"] == "room":
+            elif data["kind"] == "room":
                 room = data["content"]
                 await change_room(websocket, room)
             else:

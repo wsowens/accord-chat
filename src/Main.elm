@@ -5,6 +5,7 @@ import Html exposing (div, text)
 import Html.Attributes as Attr exposing (id, class)
 import Html.Events as Events
 import Json.Decode as Decode exposing (Decoder)
+import Json.Encode exposing (encode, object, string)
 import Regex
 
 -- MAIN
@@ -123,15 +124,15 @@ update msg model =
 -- Possible commands to send to the websocket server
 sendChat : String -> Cmd msg 
 sendChat chat = 
-  sendMsg <| String.concat ["{\"type\":\"message\",\"content\":\"", chat, "\"}"]
+  sendMsg <| encode 0 <| object [ ("kind", string "message"), ("content", string chat) ]
 
 submitName : String -> Cmd msg 
 submitName newname = 
-  sendMsg <| String.concat ["{\"type\":\"name\",\"content\":\"", newname, "\"}"]
+  sendMsg <| encode 0 <| object [ ("kind", string "name"), ("content", string newname) ]
 
 submitTopic : String -> Cmd msg
 submitTopic newtopic =
-  sendMsg <| String.concat ["{\"type\":\"room\",\"content\":\"", newtopic, "\"}"]
+  sendMsg <| encode 0 <| object [ ("kind", string "room"), ("content", string newtopic) ]
 
 -- Error handling
 handleSubmitName : Model -> String -> (Model, Cmd Msg)
