@@ -1,12 +1,14 @@
 port module Main exposing (main)
 
 import Browser
+import Browser.Dom as Dom
 import Html exposing (div, text)
 import Html.Attributes as Attr exposing (id, class)
 import Html.Events as Events
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode exposing (encode, object, string)
 import Regex
+import Task
 
 -- MAIN
 main = 
@@ -61,6 +63,7 @@ type Msg
   | ErrMsg String
   | UserAck
   | ErrCrit
+  | Nop
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -101,7 +104,7 @@ update msg model =
         _ -> (model, Cmd.none)
     RecvChat chat ->
       ( { model | chatlog = chat :: model.chatlog }
-      , Cmd.none
+      , scrollChat "chat-output"
       )
     ErrMsg e ->
       ( { model | state = Alert (e, model.state) }
@@ -119,6 +122,7 @@ update msg model =
       ( { model | state = Disconnected }
       ,  Cmd.none
       )
+    Nop -> ( model, Cmd.none )
 
 -- Possible commands to send to the websocket server
 sendChat : String -> Cmd msg 
@@ -169,6 +173,23 @@ illegalChars : Regex.Regex
 illegalChars = 
   Maybe.withDefault Regex.never 
     (Regex.fromString "[ \t\n\r_.?!@#$%^&*()<>:\"\'{}\'/\\\\]")
+
+-- command to scroll the chat
+scrollChat : String -> Cmd Msg
+scrollChat id =
+  Dom.getViewportOf id
+    |> Task.andThen (\info -> 
+      let
+          totalHeight = info.scene.height
+          offset = info.viewport.y
+          height = info.viewport.height
+      in
+      if (totalHeight - offset - height) / height < 0.5 then
+        Dom.setViewportOf id 0 info.scene.height
+      else
+        Task.succeed ()
+    )
+    |> Task.attempt (always Nop)
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
