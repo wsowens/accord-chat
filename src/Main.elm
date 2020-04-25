@@ -172,7 +172,7 @@ isBadName name =
 illegalChars : Regex.Regex
 illegalChars = 
   Maybe.withDefault Regex.never 
-    (Regex.fromString "[ \t\n\r_.?!@#$%^&*()<>:\"\'{}\'/\\\\]")
+    (Regex.fromString "[ \t\n\r_.?!@#$%^&*()<>\\\\+:\"\'{}\'/\\\\]")
 
 -- command to scroll the chat
 scrollChat : String -> Cmd Msg
