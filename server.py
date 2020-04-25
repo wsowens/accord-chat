@@ -70,7 +70,7 @@ async def send_message(websocket, message):
 async def register(websocket):
     logging.info(f"Registering: {websocket}")
     USERS[websocket] = ""
-    await join_room(websocket, "Honda_Vehicles")
+    await join_room(websocket, "Honda-Vehicles")
 
 async def join_room(websocket, room_name):
     USER_ROOMS[websocket] = room_name

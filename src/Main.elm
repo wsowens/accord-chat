@@ -151,7 +151,7 @@ handleSubmitName model newname =
           , submitName newname
           )
       Prompt _ -> 
-        ( { model | state = Chatting <| Profile newname "Honda_Vehicles" "" }
+        ( { model | state = Chatting <| Profile newname "Honda-Vehicles" "" }
         , submitName newname
         )
       -- this command is invalid, if user isn't chatting or prompted
@@ -159,7 +159,7 @@ handleSubmitName model newname =
 
 badNameErr : String
 badNameErr =
-  "Names can only contain letters, numbers, and underscores (\"_\")."
+  "Names can only contain letters, numbers, and dashes (\"-\")."
 
 isBadName : String -> Bool
 isBadName name =
@@ -168,7 +168,7 @@ isBadName name =
 illegalChars : Regex.Regex
 illegalChars = 
   Maybe.withDefault Regex.never 
-    (Regex.fromString "[ \t\n\r-.?!@#$%^&*()<>:\"\'{}\'/\\\\]")
+    (Regex.fromString "[ \t\n\r_.?!@#$%^&*()<>:\"\'{}\'/\\\\]")
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Sub Msg
