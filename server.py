@@ -58,6 +58,9 @@ async def notify_leave(room, name):
 async def send_message(websocket, message):
     """handle [message] sent from [websocket]
     [message] will be forwarded to other people in [websocket]'s room"""
+    if len(message) > 255:
+        await websocket.send(json.dumps({"content": "Please limit your message to 255 characters."}))
+        return
     name = USERS[websocket]
     room = ROOM_USERS[USER_ROOMS[websocket]]
     # we don't allow the user to send a message if they
