@@ -19,7 +19,6 @@ main =
 
 -- PORTS
 port sendMsg : String -> Cmd msg
---port clearBox : () -> Cmd msg
 
 port receivedMsg : (String -> msg) -> Sub msg
 port disconnected : (() -> msg) -> Sub msg
@@ -56,7 +55,7 @@ init _ =
 type Msg
   = SubmitName String
   | SubmitTopic String
-  | SendChat String
+  | SendChat
   | ComposeChat String
   | RecvChat Chat
   | ErrMsg String
@@ -85,11 +84,11 @@ update msg model =
             )
         -- ignore all other commands
         _ -> (model, Cmd.none)
-    SendChat chat -> 
+    SendChat -> 
       case model.state of 
         Chatting {name, topic, inProgress} ->
             ( {model | state = Chatting <| Profile name topic ""}
-            , sendChat chat
+            , sendChat inProgress
             )
         -- ignore chats if not in chatting mode
         _ -> (model, Cmd.none)
@@ -230,14 +229,14 @@ displayChat {name, topic, inProgress} chatlog =
   , Html.textarea [ class "main-element", id "chat-input", 
       Attr.spellcheck True,
       Attr.placeholder "Enter a message here.",
-      handleTextArea, Attr.value inProgress ] []
+      onEnter (always SendChat), Events.onInput ComposeChat, Attr.value inProgress ] []
   ]
 
 
 formField : (String -> Msg) -> String -> Html.Html Msg
 formField field_type current_value = 
   Html.input [ Attr.spellcheck False, Attr.value current_value,
-               class "form", handleInput field_type] []
+               class "form", onEnter field_type] []
 
 
 viewSingleChat : Chat -> Html.Html msg
@@ -259,7 +258,7 @@ displayPrompt msg =
   [ div [ class "main-element" ] [ text msg ] 
   , Html.input
     [ class "main-element", id "input-bar", Attr.spellcheck False, 
-      Attr.placeholder "enter username here", (handleInput SubmitName)] []
+      Attr.placeholder "enter username here", (onEnter SubmitName)] []
   ]
 
 
@@ -275,46 +274,28 @@ displayDisconnect =
 Unlike the default onInput function, this only fires
 when enter is pressed. 
 
-All functions below this are for making handleInput work.
+All functions below this are for making onEnter work.
 --}
-handleInput : (String -> Msg) -> Html.Attribute Msg
-handleInput msgtype =
+onEnter : (String -> Msg) -> Html.Attribute Msg
+onEnter msgtype =
   eventDecoder 
-  |> Decode.andThen (checkEnterShift Events.targetValue (Decode.fail "not enter") )
-  |> Decode.map (\v -> (msgtype v, False) )
-  |> Events.stopPropagationOn "keypress"
+  |> Decode.andThen checkEnterShift
+  |> Decode.map (\v -> (msgtype v, True) )
+  |> Events.preventDefaultOn "keypress"
 
-handleTextArea : Html.Attribute Msg
-handleTextArea =
-  eventDecoder
-  |> Decode.andThen (checkEnterShift 
-      (Decode.map (\msg -> (SendChat msg, True)) Events.targetValue)
-      (Decode.map (\msg -> (ComposeChat msg, True) ) Events.targetValue)
-    )
-  |> Events.stopPropagationOn "keypress"
 
 type alias Event =
   { shift : Bool
   , key : Int
   }
 
-checkEnterShift: (Decoder a) -> (Decoder a) -> Event -> Decoder a
-checkEnterShift ifTrue ifFalse e =
-  if e.key == 13 then
-    if e.shift then
-      ifFalse
-    else
-      ifTrue
-  else
-    ifFalse
 
-
-checkEnter: Event -> Decoder String
-checkEnter e =
-  if e.key == 13 then
-    Events.targetValue
+checkEnterShift: Event -> Decoder String
+checkEnterShift e =
+  if e.key == 13 && not e.shift then
+      Events.targetValue
   else
-    Decode.fail "Shift key pressed with enter"
+      Decode.fail "enter not pressed"
 
 
 eventDecoder : Decoder Event
