@@ -289,7 +289,7 @@ handleTextArea =
   eventDecoder
   |> Decode.andThen (checkEnterShift 
       (Decode.map (\msg -> (SendChat msg, True)) Events.targetValue)
-      (Decode.map (\msg -> (ComposeChat (Debug.log "updating: " msg), True) ) Events.targetValue)
+      (Decode.map (\msg -> (ComposeChat msg, True) ) Events.targetValue)
     )
   |> Events.stopPropagationOn "keypress"
 
