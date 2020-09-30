@@ -116,6 +116,7 @@ async def counter(websocket, path):
                 data = json.loads(message)
             except json.decoder.JSONDecodeError as ex:
                 logging.error(ex)
+                continue
             if data["kind"] == "name":
                 name = data["content"]
                 await change_name(websocket, name)
