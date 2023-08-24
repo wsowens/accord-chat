@@ -29,7 +29,7 @@ async def notify_name_change(room, old, new):
     else:
         msg = json.dumps({"content": f"{new} has entered the room."})
     if room:
-        await asyncio.wait([user.send(msg) for user in room])
+        await asyncio.wait([asyncio.create_task(user.send(msg)) for user in room])
 
 async def notify_join(room, name):
     """Notify users in [room] that someone [name] left.
@@ -41,7 +41,7 @@ async def notify_join(room, name):
     if name:
         msg = json.dumps({"content": f"{name} has entered the room."})
         if room:
-            await asyncio.wait([user.send(msg) for user in room])
+            await asyncio.wait([asyncio.create_task(user.send(msg)) for user in room])
 
 async def notify_leave(room, name):
     """Notify users in [room] that someone [name] left.
@@ -53,7 +53,7 @@ async def notify_leave(room, name):
     if name:
         msg = json.dumps({"content": f"{name} left the room."})
         if room:
-            await asyncio.wait([user.send(msg) for user in room])
+            await asyncio.wait([asyncio.create_task(user.send(msg)) for user in room])
 
 async def send_message(websocket, message):
     """handle [message] sent from [websocket]
@@ -68,7 +68,7 @@ async def send_message(websocket, message):
     if name:
         msg = json.dumps({"from": name, "content": message})
         if room:
-            await asyncio.wait([user.send(msg) for user in room])
+            await asyncio.wait([asyncio.create_task(user.send(msg)) for user in room])
 
 async def register(websocket):
     logging.info(f"Registering: {websocket}")
