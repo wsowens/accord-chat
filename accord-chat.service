@@ -1,0 +1,12 @@
+[Unit]
+Description=a simple python3+websockets chat server
+DefaultDependencies=no
+After=multi-user.target
+
+[Service]
+User=accord-chat
+WorkingDirectory=/path/to/accord-chat
+ExecStart=/path/to/accord-chat/server_env/bin/python3 server.py
+
+[Install]
+WantedBy=multi-user.target

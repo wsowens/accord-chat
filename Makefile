@@ -13,3 +13,11 @@ web/chat.js:
 
 release: web/chat.js
 	./make_release.sh
+
+install:
+	rm -rf server_env
+	python3 -m venv server_env
+	server_env/bin/python3 -m pip install -r requirements.txt
+
+install-systemd:
+	./make_service.sh
