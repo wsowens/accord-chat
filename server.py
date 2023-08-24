@@ -132,6 +132,7 @@ async def counter(websocket, path):
         await unregister(websocket)
 
 if __name__ == "__main__":
+    logging.info("Starting accord-chat, a simple chatroom server")
     # note, you might need to change the hostname and port, depending
     # on how you set this server up
     start_server = websockets.serve(counter, "localhost", 6789)
