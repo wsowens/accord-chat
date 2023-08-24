@@ -48,7 +48,7 @@ This program is largely just a proof-of-concept.
 If you want to use it seriously, I strongly advise serving your HTML over with a more robust server using HTTPS.
 When you switch to HTTPS, most browsers will no longer permit insecure WebSocket connection ("ws://hostname"), so you will have to switch to a secure connection ("wss://hostname") in `web/index.html`.
 
-`server.py` does not include any built-in SSL support, you you can either [add this yourself](https://websockets.readthedocs.io/en/stable/intro.html#secure-example) or [use a reverse proxy](https://www.nginx.com/blog/websocket-nginx/). 
+`server.py` does not include any built-in SSL support, you you can either [add this yourself](https://websockets.readthedocs.io/en/stable/howto/quickstart.html#encrypt-connections) or [use a reverse proxy](https://www.nginx.com/blog/websocket-nginx/). 
 
 ## License
 This project is licensed under the Apache License. See [LICENSE](./LICENSE) for details.
