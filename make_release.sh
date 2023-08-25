@@ -4,7 +4,7 @@ mkdir -p chat
 
 # minify the CSS
 echo "Minifying CSS..."
-curl -X POST -s --data-urlencode 'input@web/chat.css' https://cssminifier.com/raw \
+curl -X POST -s --data-urlencode 'input@web/chat.css' https://www.toptal.com/developers/cssminifier/api/raw \
  > chat/chat.min.css
 
 # minify/uglify the JS
